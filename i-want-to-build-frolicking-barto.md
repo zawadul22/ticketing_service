@@ -51,7 +51,7 @@ These use the Boot 4 modular starter names. Check each against the Boot 4.1 depe
 - `config/`: `SecurityConfig` has a stateless `SecurityFilterChain`, CSRF off, `oauth2ResourceServer().jwt()`, the role claim mapped to `ROLE_*` authorities, `BCryptPasswordEncoder`, and `JwtEncoder`/`JwtDecoder` beans built from the secret. `AdminSeeder` is a `CommandLineRunner` that creates the admin if it's missing.
 - `event/`: `Event` entity, `EventRepository` (holds the atomic decrement/increment `@Modifying` queries), `EventService`, `EventController`, and DTO records with `@Valid` constraints
 - `booking/`: `Booking` entity, `BookingStatus`, `BookingRepository`, `BookingService` (`book`, `cancel`, `listMine`), `BookingController`
-- `common/`: `GlobalExceptionHandler` (`@RestControllerAdvice`) maps `NotFoundException` to 404, `NotEnoughSeatsException` and duplicate email to 409, validation failures to 400, and forbidden actions to 403. All responses are `ProblemDetail`.
+- `common/`: `GlobalExceptionHandler` (`@RestControllerAdvice`) maps `NotFoundException` to 404, `NotEnoughSeatsException`, duplicate email, and `DataIntegrityViolationException` (a safety net for any foreign key conflict that slips past the service checks) to 409, validation failures to 400, and forbidden actions to 403. All responses are `ProblemDetail`.
 
 ### 4. REST API
 | Method | Path | Access |
@@ -67,7 +67,7 @@ These use the Boot 4 modular starter names. Check each against the Boot 4.1 depe
 Business rules:
 - You can't book past events.
 - You can't reduce an event's capacity below the number of seats already sold.
-- You can't delete an event that has confirmed bookings.
+- You can only delete an event that has no bookings at all, confirmed or cancelled. `EventService` checks `bookingRepository.existsByEventId(id)` and returns `409 Conflict` otherwise. Cancelled bookings count too, because their rows still reference the event through the `bookings.event_id` foreign key, and Postgres would reject the delete. Events with bookings can still be edited.
 
 ### 5. Tests
 - `BookingServiceTest` with Testcontainers covers:
