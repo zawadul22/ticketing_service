@@ -37,11 +37,12 @@ public class Event {
 	@Column(nullable = false)
 	private Instant startsAt;
 
-	@Column(nullable = false)
+	// capacity and availableSeats are set on insert, then changed only by the atomic UPDATE queries in
+	// EventRepository. updatable = false stops entity saves from writing back stale values over concurrent bookings.
+	@Column(nullable = false, updatable = false)
 	private int capacity;
 
-	// Changed only through the atomic UPDATE queries, never by setting it on a loaded entity
-	@Column(nullable = false)
+	@Column(nullable = false, updatable = false)
 	private int availableSeats;
 
 	@Column(nullable = false)

@@ -13,6 +13,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
 	List<Event> findByStartsAtAfterOrderByStartsAtAsc(Instant now);
 
+	List<Event> findAllByOrderByStartsAtAsc();
+
 	// Atomic check-and-decrement: returns 0 when there aren't enough seats, so concurrent bookings can't oversell.
 	// Bulk updates bypass the persistence context, so flush pending changes first and clear stale entities after.
 	@Modifying(flushAutomatically = true, clearAutomatically = true)
@@ -22,5 +24,12 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 	@Modifying(flushAutomatically = true, clearAutomatically = true)
 	@Query("UPDATE Event e SET e.availableSeats = e.availableSeats + :quantity WHERE e.id = :id")
 	int incrementAvailableSeats(Long id, int quantity);
+
+	// Shifts availableSeats by the capacity change, computed from the current row. Returns 0 when the new
+	// capacity is below the seats already sold (capacity - availableSeats).
+	@Modifying(flushAutomatically = true, clearAutomatically = true)
+	@Query("UPDATE Event e SET e.availableSeats = e.availableSeats + (:capacity - e.capacity), e.capacity = :capacity "
+			+ "WHERE e.id = :id AND e.capacity - e.availableSeats <= :capacity")
+	int updateCapacity(Long id, int capacity);
 
 }

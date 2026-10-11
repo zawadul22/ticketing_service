@@ -11,6 +11,7 @@ import com.example.ticketing_service.dto.UserResponse;
 import com.example.ticketing_service.entity.Role;
 import com.example.ticketing_service.entity.User;
 import com.example.ticketing_service.exception.DuplicateEmailException;
+import com.example.ticketing_service.exception.NotFoundException;
 import com.example.ticketing_service.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,13 @@ public class UserService {
 	@Transactional
 	public UserResponse register(RegisterRequest request) {
 		return UserResponse.from(createUser(request.email(), request.password(), Role.USER));
+	}
+
+	@Transactional(readOnly = true)
+	public UserResponse getById(Long id) {
+		return userRepository.findById(id)
+				.map(UserResponse::from)
+				.orElseThrow(() -> new NotFoundException("User not found: " + id));
 	}
 
 	/** Returns true if the admin was created, false if a user with that email already exists. */
@@ -50,7 +58,7 @@ public class UserService {
 	}
 
 	// Emails are stored trimmed and lowercased, so "Bob@X.com" and "bob@x.com" are the same account
-	private static String normalizeEmail(String email) {
+	static String normalizeEmail(String email) {
 		return email.trim().toLowerCase(Locale.ROOT);
 	}
 
