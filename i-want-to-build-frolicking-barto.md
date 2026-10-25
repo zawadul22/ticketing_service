@@ -17,14 +17,18 @@ Payments, seat maps, email, and refresh tokens are out of scope.
 
 - Security: `SecurityConfig` (stateless, CSRF off, URL rules, `@EnableMethodSecurity`), HS256 `JwtEncoder`/`JwtDecoder` from `app.jwt.secret` (startup fails if < 32 bytes; issuer validated), `role` claim → `ROLE_*`. `JwtService` issues tokens (`sub` = user id, `email`, `role`, 2h TTL). `AuthService`: register returns `AuthResponse(token, expiresAt, user)`; login gives the same 401 for unknown email and wrong password (dummy BCrypt check against timing leaks). `GET /api/auth/me`. `includePast=true` is ADMIN-only via `@PreAuthorize`. 401/403 come back as ProblemDetail. Swagger has a Bearer "Authorize" button. Tests: `AuthControllerTest`, `EventControllerTest` (auth rules), `AuthServiceTest`, `AuthFlowTest` (end to end with real tokens).
 
-**Next:** step 4, bookings. Open decision: store `unit_price_cents` on bookings via a `V2` migration (recommended) or show no prices on bookings.
+- Bookings: `BookingController`, `BookingService` (`book`, `listMine`, `cancel`), `BookingRequest` (quantity 1–10) / `BookingResponse` (booking + event id, name, venue, start). The user id always comes from the token. Booking = event-not-started check + atomic `decrementAvailableSeats` + insert in one transaction (409 `NotEnoughSeatsException` when sold out). Cancel = owner check (403 `ForbiddenException`) + not-started check + atomic `BookingRepository.cancelIfConfirmed` (409 if already cancelled) + `incrementAvailableSeats`. Tests: `BookingControllerTest`, `BookingServiceTest`, `BookingConcurrencyTest` (50 threads → exactly 10 of 10 seats sold; 10 simultaneous cancels → seats returned once).
+
+**Next:** step 5, frontend (router, proxy, auth context, login/register). Note: register and login return `AuthResponse(token, expiresAt, user)`.
 
 **Decisions made along the way:**
 - Packages are by layer (`entity/`, `repository/`, `service/`, `controller/`, `dto/`, `exception/`, `config/`), not by feature as section 3 originally described.
 - No docker-compose: the app uses the existing `local-postgres` container (PostgreSQL 18, `localhost:5432/ticketing_system`, `postgres`/`1234`).
 - Build order changed: users first, then events, then security, then bookings. Bookings need the logged-in user, so security must come before them.
 - Entities have only one-way `@ManyToOne` relations (no inverse `@OneToMany`, no cascades), lazy, with explicit `@JoinColumn`.
-- Login, `/api/auth/me` and role rules wait for the security step. At that point, register may switch to returning `AuthResponse(token, ...)`.
+- Register returns a token (`AuthResponse`), like login, so registering also logs the user in.
+- `GET /api/events?includePast=true` is ADMIN-only, through `@PreAuthorize` on `EventController.list`.
+- No price on bookings: there's no `unit_price_cents` snapshot (no `V2` migration), so bookings don't show what was paid. Price changes would need it later.
 
 ---
 
@@ -119,8 +123,8 @@ Business rules:
 1b. ✅ Users: registration, password hashing, admin seeder, exception handler, and tests.
 2. ✅ Events CRUD (no security yet) and tests.
 3. ✅ Security: login, JWT, `/api/auth/me`, role rules, Swagger auth, and tests.
-4. **← next** Bookings with atomic seat decrement, cancel, and the concurrency test.
-5. Frontend: router, proxy, auth context, login/register.
+4. ✅ Bookings with atomic seat decrement, cancel, and the concurrency test.
+5. **← next** Frontend: router, proxy, auth context, login/register.
 6. Frontend: events list/detail, booking, my bookings.
 7. Frontend: admin event pages.
 8. Keep `CLAUDE.md` up to date (it was already updated on 2026-10-11 for the DB setup, layer packages and frontend commands).
