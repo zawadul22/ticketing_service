@@ -8,4 +8,10 @@ export default defineConfig({
     react(),
     babel({ presets: [reactCompilerPreset()] })
   ],
+  // The browser only ever talks to Vite, so the backend needs no CORS setup
+  server: {
+    proxy: {
+      '/api': 'http://localhost:8080',
+    },
+  },
 })

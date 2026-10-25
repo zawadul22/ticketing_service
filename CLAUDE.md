@@ -45,4 +45,12 @@ Frontend, run from `ticketing_service_frontend/`: `npm run dev`, `npm run build`
 - Errors are `ProblemDetail` responses from `exception/GlobalExceptionHandler` (extends `ResponseEntityExceptionHandler`); validation failures include an `errors` map per field.
 - Tests: controller slices use `@WebMvcTest` + `@Import(SecurityConfig.class)` + `MockMvcTester` + `@MockitoBean`, with spring-security-test's `jwt()` to fake a USER/ADMIN; integration tests use `@SpringBootTest @Import(TestcontainersConfiguration.class)`.
 - Configuration goes in `application.properties` (not YAML).
-- Source files use tab indentation.
+- Backend source files use tab indentation.
+
+## Frontend
+
+- `ticketing_service_frontend/` uses 2-space indentation, no semicolons, single quotes (the Vite template style).
+- `react-router` 7 (imports from `react-router`). Vite proxies `/api` to `localhost:8080`, so API paths are relative.
+- All requests go through `src/api/client.ts`; `src/api/types.ts` must mirror the backend DTO records.
+- The session is read with `useAuth()` from `src/auth/context.ts`; pages that need a role are wrapped in `RequireAuth` in `App.tsx`.
+- Styles are plain CSS in `src/index.css` (CSS variables, light/dark).

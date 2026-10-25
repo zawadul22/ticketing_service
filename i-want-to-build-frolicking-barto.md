@@ -7,7 +7,7 @@ Payments, seat maps, email, and refresh tokens are out of scope.
 
 ---
 
-## Status (updated 2026-10-11)
+## Status (updated 2026-10-25)
 **Done** (committed on `main`):
 - Infra: dependencies, datasource for `local-postgres`, Flyway `V1__init.sql`, Testcontainers (`postgres:18`) test config, Swagger UI via springdoc 3.1.1.
 - `entity/`: `User`, `Role`, `Event`, `Booking`, `BookingStatus`.
@@ -19,7 +19,9 @@ Payments, seat maps, email, and refresh tokens are out of scope.
 
 - Bookings: `BookingController`, `BookingService` (`book`, `listMine`, `cancel`), `BookingRequest` (quantity 1–10) / `BookingResponse` (booking + event id, name, venue, start). The user id always comes from the token. Booking = event-not-started check + atomic `decrementAvailableSeats` + insert in one transaction (409 `NotEnoughSeatsException` when sold out). Cancel = owner check (403 `ForbiddenException`) + not-started check + atomic `BookingRepository.cancelIfConfirmed` (409 if already cancelled) + `incrementAvailableSeats`. Tests: `BookingControllerTest`, `BookingServiceTest`, `BookingConcurrencyTest` (50 threads → exactly 10 of 10 seats sold; 10 simultaneous cancels → seats returned once).
 
-**Next:** step 5, frontend (router, proxy, auth context, login/register). Note: register and login return `AuthResponse(token, expiresAt, user)`.
+- Frontend (`ticketing_service_frontend/`): `react-router` 7, Vite proxy for `/api`, `api/client.ts` (Bearer token, ProblemDetail errors with field `errors`, sign-out on 401), `auth/` (`AuthProvider` keeps the `AuthResponse` in `localStorage` and signs out at `expiresAt`, `RequireAuth role?`). Pages: events list, event detail with booking (USER only; shows 409 and refreshes seats), login/register (one `AuthForm`), my bookings with cancel, admin events table (incl. past) with edit/delete, admin create/edit form. Plain CSS in `index.css` with light/dark themes. Checked end to end in headless Chromium against the real backend.
+
+**Next:** nothing planned. Possible extras: frontend tests, price snapshot on bookings.
 
 **Decisions made along the way:**
 - Packages are by layer (`entity/`, `repository/`, `service/`, `controller/`, `dto/`, `exception/`, `config/`), not by feature as section 3 originally described.
