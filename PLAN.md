@@ -175,7 +175,9 @@ Use appropriate HTTP statuses, including `201` for creation, `400` for invalid i
 - [x] Module 2: data model, entities, and repositories.
   - Added User, Event, Booking, role/status enums, database constraints, and repository queries.
   - Verified PostgreSQL persistence, defaults, relationships, email uniqueness, price snapshots, event ordering, and invalid numeric values/deletion restrictions.
-- [ ] Module 3: authentication and authorization.
+- [x] Module 3: authentication and authorization.
+  - Implemented registration/login JWT responses, BCrypt passwords, current-user lookup, configured admin setup, role-based event-route protection, and consistent API errors.
+  - Verified PostgreSQL HTTP integration tests for validation, duplicate/concurrent registration, token verification/expiry, permissions, and admin setup.
 - [ ] Module 4: event management.
 - [ ] Module 5: booking and cancellation.
 - [ ] Module 6: broader backend verification and documentation.
