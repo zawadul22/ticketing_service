@@ -4,7 +4,20 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ticketing_service_frontend</title>
+    <meta name="theme-color" content="#fbfaf7" />
+    <script>
+      // Apply the theme before first paint, including on deep-link reloads.
+      try {
+        const saved = localStorage.getItem('gather.theme')
+        const theme = saved === 'dark' || saved === 'light' ? saved : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        document.documentElement.dataset.theme = theme
+        document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#171c18' : '#fbfaf7'
+      } catch {
+        document.documentElement.dataset.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      }
+    </script>
+    <meta name="description" content="Discover your next great experience. Browse events, book tickets, and keep your plans together with Gather." />
+    <title>Gather — Good plans. Great memories.</title>
   </head>
   <body>
     <div id="root"></div>

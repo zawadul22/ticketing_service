@@ -189,6 +189,10 @@ Use appropriate HTTP statuses, including `201` for creation, `400` for invalid i
   - Added connected HTTP verification for registration/login, browsing, booking, personal bookings, cancellation, and admin create/edit/delete with restricted deletion.
   - Verified Swagger UI availability, documented API paths, and Bearer security declarations; updated reproducible setup and verification instructions.
   - Interactive browser/frontend flows remain part of the frontend stage; automated backend verification uses HTTP and the OpenAPI contract.
+- [x] React frontend: discovery, event details, registration/login, personal bookings/cancellation, admin listings and event forms.
+  - Added routing, JWT session restoration/expiry/logout, role guards, shared API errors, loading/empty/success/error states, conflict refresh, and responsive layouts.
+  - Verified production build and lint on 2026-11-12; all 18 desktop/mobile browser checks passed (16 controlled API-flow checks and 2 read-only checks against the existing Spring Boot/PostgreSQL API through Vite).
+  - Browser mutation checks use controlled responses; actual PostgreSQL mutations and connected HTTP flows are covered by the backend suite. See `ticketing_service_frontend/README.md` for run and verification commands.
 
 ### Planned order
 

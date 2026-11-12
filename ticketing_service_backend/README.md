@@ -51,9 +51,11 @@ Registration/login return `{ "accessToken": "...", "tokenType": "Bearer", "expir
 - Authentication is stateless. Logout means discarding the token in the client. There is no server-side logout/revocation endpoint; a copied token remains usable until expiry.
 - Errors share `timestamp`, `status`, `error`, `message`, and `fieldErrors`. Validation returns 400, invalid credentials/tokens 401, insufficient permissions 403, missing resources 404, and duplicate registration 409.
 
-### Optional admin setup
+### Admin setup
 
-Set these variables before starting the backend:
+Local admin setup is enabled by default. On startup, the account configured in `application.properties` is created if absent: email `admin@email.com`, password `admin@123`. Restart the backend after changing these startup settings. Sign in through the normal frontend login page; admin navigation appears for accounts with the `ADMIN` role.
+
+To override the configured values, set these variables before starting the backend:
 
 ```powershell
 $env:ADMIN_ENABLED = 'true'

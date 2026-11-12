@@ -1,0 +1,113 @@
+:root {
+  color-scheme: light;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+}
+
+.theme-toggle:hover {
+  background: #40574312;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --paper: #171c18;
+  --ink: #f0eee5;
+  --muted: #b1b8a9;
+  --line: #3a4439;
+  --orange: #f48565;
+  --orange-dark: #ff9a7c;
+  --green: #bfd2ac;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+[data-theme='dark'] input:not([type='checkbox']),
+[data-theme='dark'] textarea,
+[data-theme='dark'] select {
+  background: #202720;
+  border-color: #56604f;
+}
+
+[data-theme='dark'] input::placeholder,
+[data-theme='dark'] textarea::placeholder { color: #a2aa98; }
+[data-theme='dark'] input:focus,
+[data-theme='dark'] textarea:focus,
+[data-theme='dark'] select:focus { border-color: #bfd2ac; box-shadow: 0 0 0 3px #bfd2ac22; }
+[data-theme='dark'] input[type='checkbox'] { accent-color: #b8cc9c; }
+[data-theme='dark'] .button-primary { color: #241b15; }
+[data-theme='dark'] .button-dark { background: #e7ebdc; color: #20281d; }
+[data-theme='dark'] .button-dark:hover { background: #d2dcc4; }
+[data-theme='dark'] .button-outline { border-color: #59634f; }
+[data-theme='dark'] .button-outline:hover,
+[data-theme='dark'] .theme-toggle:hover { background: #303b2d; }
+[data-theme='dark'] .button-danger { background: #ad382e; color: #fff6f1; }
+[data-theme='dark'] .danger-text { color: #ffac95; }
+[data-theme='dark'] .alert-error { background: #3a2520; border-color: #805040; color: #ffc2a9; }
+[data-theme='dark'] .alert-success { background: #263728; border-color: #516c43; color: #d4e9c2; }
+[data-theme='dark'] .live-dot { background: #bad395; }
+[data-theme='dark'] .inactive-dot { background: #8d9583; }
+[data-theme='dark'] .avatar,
+[data-theme='dark'] .empty-icon { background: #37452f; color: #d0e0b9; }
+[data-theme='dark'] .brand-mark { background: #b2462b; }
+[data-theme='dark'] .empty-state { background: #212a21; border-color: #526049; }
+[data-theme='dark'] .event-card,
+[data-theme='dark'] .booking-panel,
+[data-theme='dark'] .booking-card,
+[data-theme='dark'] .event-form,
+[data-theme='dark'] .auth-panel,
+[data-theme='dark'] .search-field,
+[data-theme='dark'] .table-wrap { background: #222a22; }
+[data-theme='dark'] .event-card:hover { box-shadow: 0 12px 30px #0003; }
+[data-theme='dark'] .event-date { color: #bec6b5; }
+[data-theme='dark'] .event-card-bottom { border-color: var(--line); }
+[data-theme='dark'] .round-link,
+[data-theme='dark'] .quantity-picker button { background: #35412e; border-color: #58644d; }
+[data-theme='dark'] .availability { background: #1b241b; color: #e4ebd8; }
+[data-theme='dark'] .sold-out { background: #30372d; color: #cbd1c0; }
+[data-theme='dark'] .theme-0 { --art-bg: #344a2d; --art-ink: #d1e1b8; }
+[data-theme='dark'] .theme-1 { --art-bg: #56372e; --art-ink: #f8c2a3; }
+[data-theme='dark'] .theme-2 { --art-bg: #383951; --art-ink: #d4d0f4; }
+[data-theme='dark'] .theme-3 { --art-bg: #4e4728; --art-ink: #eddfa0; }
+[data-theme='dark'] .art-ticket { background: #ffffff08; box-shadow: 7px 7px 0 #ffffff08; }
+[data-theme='dark'] .hero-graphic,
+[data-theme='dark'] .auth-story { background: #293527; }
+[data-theme='dark'] .hero-circle,
+[data-theme='dark'] .hero-circle::after,
+[data-theme='dark'] .auth-ring { border-color: #62734e; }
+[data-theme='dark'] .hero-ticket { background: #d1d5ad; color: #273b27; border-color: #99a079; box-shadow: 7px 10px 0 #0003; }
+[data-theme='dark'] .hero-stamp { color: #fff7ee; background: #ad4029; }
+[data-theme='dark'] .closing-banner,
+[data-theme='dark'] .form-aside { background: #2c3a28; color: #d5e0c5; }
+[data-theme='dark'] .closing-banner p,
+[data-theme='dark'] .form-aside p,
+[data-theme='dark'] .auth-story > p { color: #bbc8ad; }
+[data-theme='dark'] .form-aside hr { border-color: #526347; }
+[data-theme='dark'] .booking-date { background: #2e3e2a; border-color: #4f6143; }
+[data-theme='dark'] .booking-cancelled { background: #20261f; }
+[data-theme='dark'] .status-confirmed { background: #34472e; color: #d5e9bc; }
+[data-theme='dark'] .status-cancelled,
+[data-theme='dark'] .status-past { background: #3b4136; color: #d1d6c7; }
+[data-theme='dark'] .tabs button.active { background: #37472d; color: #e2ecd5; border-color: #546849; }
+[data-theme='dark'] .stats-grid > div,
+[data-theme='dark'] th { background: #283224; }
+[data-theme='dark'] .field > small.field-error { color: #ffb299; }
+[data-theme='dark'] input[aria-invalid='true'] { border-color: #e88770; }
+[data-theme='dark'] .spinner { border-color: #485541; border-top-color: #d0e0b9; }
+[data-theme='dark'] .skip-link { background: #e7ebdc; color: #20281d; }
+
+@media (max-width: 480px) {
+  .account-nav { gap: 8px; }
+  .theme-toggle { width: 30px; height: 30px; }
+}
