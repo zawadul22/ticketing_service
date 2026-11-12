@@ -171,16 +171,24 @@ Use appropriate HTTP statuses, including `201` for creation, `400` for invalid i
 
 - [x] Module 1: backend foundation, environment-configurable PostgreSQL, Hibernate schema management, validation/security dependencies, Swagger/OpenAPI, and Vite API proxy.
   - Verified: Gradle build and four PostgreSQL smoke tests; frontend build and lint; health request through the Vite proxy.
-  - Local PostgreSQL runs through Compose on port 5433. See `ticketing_service_backend/README.md` for setup.
+  - Uses the existing PostgreSQL instance on port 5432; optional Compose setup uses port 5433. See `ticketing_service_backend/README.md` for setup.
 - [x] Module 2: data model, entities, and repositories.
   - Added User, Event, Booking, role/status enums, database constraints, and repository queries.
   - Verified PostgreSQL persistence, defaults, relationships, email uniqueness, price snapshots, event ordering, and invalid numeric values/deletion restrictions.
 - [x] Module 3: authentication and authorization.
   - Implemented registration/login JWT responses, BCrypt passwords, current-user lookup, configured admin setup, role-based event-route protection, and consistent API errors.
   - Verified PostgreSQL HTTP integration tests for validation, duplicate/concurrent registration, token verification/expiry, permissions, and admin setup.
-- [ ] Module 4: event management.
-- [ ] Module 5: booking and cancellation.
-- [ ] Module 6: broader backend verification and documentation.
+- [x] Module 4: event management.
+  - Added public event browsing/details, admin CRUD and past-event listing, DTO validation, future-start checks, booking-history deletion restrictions, and safe capacity changes.
+  - Verified HTTP APIs and PostgreSQL row-lock concurrency in both capacity-update/seat-reservation orders using the existing configured database.
+- [x] Module 5: booking and cancellation.
+  - Added authenticated booking creation, personal booking lists, and owner-only cancellation with price snapshots and transactional seat updates.
+  - Verified PostgreSQL integration tests for overselling prevention, exactly-once seat restoration, concurrent capacity changes, and rollback on booking/cancellation failures.
+- [x] Module 6: broader backend verification and documentation.
+  - Clean backend build passed all 73 tests on 2026-11-12 against the existing configured PostgreSQL database.
+  - Added connected HTTP verification for registration/login, browsing, booking, personal bookings, cancellation, and admin create/edit/delete with restricted deletion.
+  - Verified Swagger UI availability, documented API paths, and Bearer security declarations; updated reproducible setup and verification instructions.
+  - Interactive browser/frontend flows remain part of the frontend stage; automated backend verification uses HTTP and the OpenAPI contract.
 
 ### Planned order
 

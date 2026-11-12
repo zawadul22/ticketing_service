@@ -1,6 +1,6 @@
 # Ticketing service backend
 
-Modules 1–3 provide the Spring Boot foundation, persistence model, and user authentication. Event and booking APIs will be added in subsequent modules. Flyway is excluded; Hibernate manages the local schema with `ddl-auto=update`.
+Backend Modules 1–6 are implemented and verified: foundation, persistence model, user authentication, event management, transactional booking/cancellation, and backend verification/documentation. Frontend implementation and browser flows remain separate work. Flyway is excluded; Hibernate manages the local schema with `ddl-auto=update`.
 
 ## Requirements
 
@@ -12,11 +12,10 @@ Modules 1–3 provide the Spring Boot foundation, persistence model, and user au
 From `ticketing_service_backend`:
 
 ```powershell
-docker compose up -d --wait
 .\gradlew.bat bootRun
 ```
 
-The local database uses port `5433`, database `ticketing_service`, username `ticketing`, and password `ticketing_local`. Port 5433 avoids conflicting with an existing PostgreSQL installation on 5432. These defaults are for local development. Alternatively, create a PostgreSQL database yourself and configure the connection before starting the backend:
+Use the existing PostgreSQL instance configured in `application.properties`: port `5432`, database `ticketing_service`, username `postgres`, and password `root`. These defaults are for local development. Connection settings can be overridden before starting the backend:
 
 ```powershell
 $env:DB_URL = 'jdbc:postgresql://localhost:5432/ticketing_service'
@@ -26,13 +25,13 @@ $env:SERVER_PORT = '8080'
 .\gradlew.bat bootRun
 ```
 
-Compose also reads `DB_USERNAME` and `DB_PASSWORD` from the shell when creating a new database volume. Changing them does not update credentials in an existing volume.
+The supplied Compose file is optional; the application does not require a new container. If using Compose instead of your existing database, set `DB_URL=jdbc:postgresql://localhost:5433/ticketing_service`, `DB_USERNAME=ticketing`, and `DB_PASSWORD=ticketing_local`, then run `docker compose up -d --wait`. Compose reads `DB_USERNAME` and `DB_PASSWORD` when creating a new database volume; changing them does not update credentials in an existing volume.
 
 - Health: http://localhost:8080/api/health (includes database connectivity; returns 503 when unhealthy)
 - Swagger UI: http://localhost:8080/swagger-ui/index.html
 - OpenAPI: http://localhost:8080/v3/api-docs
 
-Health, API documentation, registration, and login are public. Other user APIs require a Bearer token. Event-management routes are restricted to admins; event and booking handlers arrive in later modules.
+Health, API documentation, registration, login, and event browsing are public. Other user APIs require a Bearer token. Event management and listings that include past events require an admin token.
 
 ## User authentication
 
@@ -69,11 +68,20 @@ Startup creates the admin if absent. Repeated startup preserves the existing adm
 Tests use real PostgreSQL and the same `DB_*` environment variables as the application:
 
 ```powershell
-docker compose up -d --wait
 .\gradlew.bat build
 ```
 
 The foundation smoke tests verify PostgreSQL connectivity, HTTP health, OpenAPI/Swagger availability, and denial of anonymous access to other routes. Transactional persistence tests verify entity relationships, defaults, email uniqueness, price snapshots, event ordering, numeric constraints, and foreign keys protecting booking history. Authentication integration tests cover registration/login, current-user lookup, BCrypt hashing, duplicate/concurrent registration, validation, invalid/expired JWTs, role restrictions, and admin setup. Persistence tests roll back records; HTTP tests remove their own accounts. The test profile supplies a test-only signing key and disables automatic admin setup, so `JWT_SECRET` is not required to run tests.
+
+Final backend verification on 2026-11-12: `./gradlew.bat clean build` passed all 73 tests using the existing PostgreSQL connection. `BackendFlowTests` exercises admin setup/login, user registration/login, public event browsing, booking, personal bookings, cancellation, admin event updates/deletion, and booking-history deletion restrictions as a connected HTTP flow. Swagger checks verify the served UI page, every API path, and Bearer security declarations; these are automated HTTP/contract checks, not interactive browser clicks.
+
+To repeat just the connected-flow and Swagger checks:
+
+```powershell
+.\gradlew.bat test --tests '*BackendFlowTests'
+```
+
+For interactive Swagger verification, open the UI, register/login, copy `accessToken` into **Authorize**, browse events, book tickets, list `/api/bookings/me`, and cancel. Log in with an admin token to create/edit/delete events and list past events. Events with booking history must return 409 on deletion, even after cancellation.
 
 ## Persistence model
 
@@ -82,6 +90,57 @@ The foundation smoke tests verify PostgreSQL connectivity, HTTP health, OpenAPI/
 - `Booking` maps to `bookings`: lazy user/event relationships, quantity 1–10, price snapshot, `CONFIRMED`/`CANCELLED` status, and creation timestamp. Booking history is preserved without cascading deletes.
 - Repositories provide CRUD plus email lookup, chronological event listing, personal booking listing, and booking-history checks.
 
-Constructing or saving a booking does not reserve seats. Transactional seat changes and cancellation will be implemented in Module 5. Future-start validation and safe capacity changes belong to the event service in Module 4; past events must remain persistable.
+Constructing or saving a booking directly does not reserve seats. Use `BookingService` to reserve seats, create bookings, or cancel them transactionally.
 
-Stop the local database with `docker compose stop` (data is preserved).
+## Event management
+
+| Method | Path | Access / result |
+|---|---|---|
+| GET | `/api/events` | Public upcoming events, sorted by start time |
+| GET | `/api/events/{id}` | Public details, including past events |
+| GET | `/api/events?includePast=true` | Admin listing of upcoming and past events |
+| POST | `/api/events` | Admin creation; returns 201 with Location header |
+| PUT | `/api/events/{id}` | Admin full update; returns 200 |
+| DELETE | `/api/events/{id}` | Admin deletion without booking history; returns 204 |
+
+Creation and updates accept this shape (all fields except description are required):
+
+```json
+{
+  "name": "Live concert",
+  "description": "An evening of music",
+  "venue": "Main hall",
+  "startTime": "2099-01-01T18:00:00+06:00",
+  "capacity": 100,
+  "ticketPriceCents": 2500
+}
+```
+
+Responses also include `id` and `availableSeats`. New events start with all seats available. Prices use integer cents; zero permits free events. Dates accept timezone offsets and are returned in UTC.
+
+New events must start in the future. On update, an unchanged past start time is allowed; rescheduling requires a future time. Capacity changes preserve the number of reserved seats and return 409 if capacity falls below that count. Any booking history prevents deletion, including cancelled bookings. Event price changes do not modify existing booking price snapshots.
+
+Capacity changes acquire a PostgreSQL row lock before reading seat counts. Concurrent conditional seat reservations serialize with those changes. Integration tests exercise both lock orders, as well as HTTP CRUD, permissions, validation, ordering, deletion restrictions, and Swagger authentication.
+
+For the optional Compose database, `docker compose stop` stops it while preserving data.
+
+## Booking and cancellation
+
+All booking endpoints require `Authorization: Bearer <accessToken>` and support Swagger's **Authorize** button.
+
+| Method | Path | Behavior |
+|---|---|---|
+| POST | `/api/events/{eventId}/bookings` | Accepts `{ "quantity": 1 }`; returns 201 with the confirmed booking |
+| GET | `/api/bookings/me` | Returns only the caller's bookings, newest first, including cancellations |
+| POST | `/api/bookings/{id}/cancel` | Owner cancels a confirmed booking before the event starts; returns 200 |
+
+Booking responses contain `id`, nested `event` details/current availability, `quantity`, the `unitPriceCents` snapshot, `totalPriceCents`, `status`, and `createdAt`. Totals use the booking price snapshot, so later event price changes do not change booking totals. A supplied user ID is ignored; ownership comes from the authenticated caller.
+
+- Quantity must be 1–10. No payment is collected.
+- Missing events/bookings return 404; another user's cancellation attempt returns 403.
+- Insufficient seats, bookings/cancellations after the start time, and repeated cancellations return 409.
+- Seat reservation uses an atomic conditional update inside the booking transaction. The event row is locked first so capacity, start-time, and price changes cannot race with the booking.
+- Cancellation locks the event and booking, changes the status once, and restores seats in the same transaction. Booking history remains stored.
+- All seat-changing operations lock the event first, keeping their lock order consistent. If a transaction fails, both the seat change and booking change roll back.
+
+PostgreSQL integration tests cover the full HTTP flow, ownership, validation, price snapshots, rollback on injected failures, concurrent bookings without overselling, simultaneous cancellations without duplicate seat restoration, and concurrent bookings/cancellations/capacity changes. These tests use the existing connection settings and remove only their own fixtures.

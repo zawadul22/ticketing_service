@@ -196,8 +196,7 @@ class AuthIntegrationTests {
         assertThat(login.statusCode()).isEqualTo(200);
         assertThat(body(login).path("user").path("role").asString()).isEqualTo("ADMIN");
         var token = body(login).path("accessToken").asString();
-        // Event handlers arrive in Module 4; reaching 404 proves authorization allowed this request.
-        assertThat(get("/api/events?includePast=true", token).statusCode()).isEqualTo(404);
+        assertThat(get("/api/events?includePast=true", token).statusCode()).isEqualTo(200);
         original.setRole(Role.USER);
         users.saveAndFlush(original);
         assertError(get("/api/events?includePast=true", token), 403);
